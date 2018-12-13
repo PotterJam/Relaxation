@@ -23,13 +23,6 @@ initVec n = V.zipWith3 (,,) (V.enumFromTo 0 (size-1)) vec (V.replicate size True
         topandbottom = V.replicate n 1.0
         vec          = topandbottom V.++ middle V.++ topandbottom
 
-prettyPrint :: Int -> Vector Elem -> IO ()
-prettyPrint dim vec = do
-    let valVec   = V.map (\(_, v, _) -> v) vec
-        splitVec = V.chunksOf dim valVec
-    mapM (putStrLn.show) splitVec
-    return ()
-
 constIndex :: Int -> Int -> Bool
 constIndex i dim = topRow || bottomRow || leftCol || rightCol
     where
@@ -37,10 +30,6 @@ constIndex i dim = topRow || bottomRow || leftCol || rightCol
        bottomRow =  i >= (dim*dim) - dim
        leftCol   = (mod i dim) == 0
        rightCol  = (mod i dim) == (dim-1)
-
-getNewElem :: Int -> Vector Elem -> Elem -> Elem
-getNewElem dim vec e@(i, _, _) = if constIndex i dim then e 
-                               else avgNeighbors dim e vec
 
 -- unsafe, assumes elem has neighbours
 avgNeighbors :: Int -> Elem -> Vector Elem -> Elem 
@@ -53,6 +42,31 @@ avgNeighbors dim (i, v, s) vec = (i, newV, dComp v newV)
         newV  = (up + down + left + right)/4
         dComp = (\a b -> abs (a-b) < precision)
 
+getNewElem :: Int -> Vector Elem -> Elem -> Elem
+getNewElem dim vec e@(i, _, _) = if constIndex i dim then e 
+                                 else avgNeighbors dim e vec
+
+relaxVec :: Int -> Vector Elem -> Vector Elem
+relaxVec dim vec = if settled updatedVec then updatedVec 
+                   else relaxVec dim updatedVec
+    where 
+        updatedVec = V.map (getNewElem dim vec) vec
+
+settled :: Vector Elem -> Bool
+settled = all (\(_, _, s) -> s == True)
+
+prettyPrint :: Int -> Vector Elem -> IO ()
+prettyPrint dim vec = do
+    let valVec   = V.map (\(_, v, _) -> v) vec
+        splitVec = V.chunksOf dim valVec
+    mapM (putStrLn.show) splitVec
+    return ()
+
 main = do
-    putStrLn "Done"
+    let dim        = 5
+        vec        = initVec dim
+        relaxedVec = relaxVec dim vec
+    prettyPrint dim relaxedVec
+    return ()
+        
 

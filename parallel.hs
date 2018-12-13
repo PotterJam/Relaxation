@@ -4,6 +4,8 @@ import Data.Vector (Vector)
 import qualified Data.Vector.Split as V
 import qualified Data.Vector as V
 import Control.Monad
+import Control.Parallel.Strategies
+import Data.Vector.Strategies
 
 type Elem = (Int, Double, Bool)
 
@@ -51,7 +53,7 @@ relaxVec dim vec = if settled updatedVec then updatedVec
                    else relaxVec dim updatedVec
     where 
         updatedVec = V.map (getNewElem dim vec) vec
-
+        --updatedVec = (V.map (getNewElem dim vec) vec) `using` (parVector 100)
 settled :: Vector Elem -> Bool
 settled = all (\(_, _, s) -> s == True)
 
@@ -63,7 +65,7 @@ prettyPrint dim vec = do
     return ()
 
 main = do
-    let dim        = 5
+    let dim        = 3000
         vec        = initVec dim
         relaxedVec = relaxVec dim vec
     prettyPrint dim relaxedVec

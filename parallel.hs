@@ -52,8 +52,8 @@ relaxVec :: Int -> Vector Elem -> Vector Elem
 relaxVec dim vec = if settled updatedVec then updatedVec 
                    else relaxVec dim updatedVec
     where 
-        updatedVec = V.map (getNewElem dim vec) vec
-        --updatedVec = (V.map (getNewElem dim vec) vec) `using` (parVector 100)
+        updatedVec = (V.map (getNewElem dim vec) vec) `using` (parVector 100)
+
 settled :: Vector Elem -> Bool
 settled = all (\(_, _, s) -> s == True)
 
